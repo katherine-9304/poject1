@@ -14,10 +14,14 @@ export default function SecApiPage() {
   const fetchSecData = async () => {
     setSecLoading(true);
     setSecError('');
+    setSecData([]);
+
     try {
       const url = new URL('https://api.api-ninjas.com/v1/sec');
       url.searchParams.append('ticker', ticker);
       url.searchParams.append('filing', filing);
+
+      console.log('Fetching URL:', url.toString()); // Log the constructed URL
 
       const response = await fetch(url, {
         headers: {
@@ -25,12 +29,18 @@ export default function SecApiPage() {
         },
       });
 
-      if (!response.ok) throw new Error('Failed to fetch SEC data.');
+      if (!response.ok) {
+        const errorDetails = await response.json();
+        console.error('Error Details:', errorDetails); // Log detailed error
+        throw new Error(
+          `Error ${response.status}: ${errorDetails.message || 'Failed to fetch SEC data.'}`
+        );
+      }
 
       const data = await response.json();
       setSecData(data);
     } catch (err) {
-      setSecError(err.message || 'An error occurred while fetching SEC data.');
+      setSecError(err.message || 'An unexpected error occurred.');
     } finally {
       setSecLoading(false);
     }
@@ -39,19 +49,32 @@ export default function SecApiPage() {
   return (
     <div>
       {/* Navigation */}
-      {/* Reutiliza el navbar */}
       <nav className="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top">
         <div className="container px-5">
           <a className="navbar-brand" href="#page-top">
-            <Image src="/logo.png" alt="Logo" width={40} height={40} className="d-inline-block align-text-top" />
+            <Image
+              src="/logo.png"
+              alt="Logo"
+              width={40}
+              height={40}
+              className="d-inline-block align-text-top"
+            />
           </a>
           <a className="navbar-brand" href="/">My Website</a>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarResponsive"
+            aria-controls="navbarResponsive"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
             <span className="navbar-toggler-icon"></span>
           </button>
           <div className="collapse navbar-collapse" id="navbarResponsive">
             <ul className="navbar-nav ms-auto">
-            <li className="nav-item"><Link className="nav-link" href="/">Home</Link></li>
+              <li className="nav-item"><Link className="nav-link" href="/">Home</Link></li>
               <li className="nav-item"><Link className="nav-link" href="/about">About</Link></li>
               <li className="nav-item"><Link className="nav-link" href="/portfolio">Portfolio</Link></li>
               <li className="nav-item"><Link className="nav-link" href="/contact">Contact</Link></li>
@@ -113,7 +136,7 @@ export default function SecApiPage() {
             {secLoading ? 'Loading...' : 'Fetch SEC Data'}
           </button>
         </form>
-        {secError && <p className="error">{secError}</p>}
+        {secError && <p className="error" style={{ color: 'red' }}>{secError}</p>}
         <ul>
           {secData.map((item, index) => (
             <li key={index}>
@@ -147,3 +170,4 @@ export default function SecApiPage() {
     </div>
   );
 }
+
